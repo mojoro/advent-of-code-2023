@@ -1,5 +1,7 @@
 import re
 
+# go through the array[string] representation of the txt file and extract the winning numbers 
+# and card numbers
 def process_numbers(lines):
   winning_numbers = []
   card_numbers = []
@@ -14,6 +16,7 @@ def process_numbers(lines):
 
   return [winning_numbers, card_numbers]
 
+# return the amount of matching winning numbers appear in a given card's numbers
 def evaluate_cards(winning_numbers, card_numbers):
   i = 0
   j = 0
@@ -37,19 +40,32 @@ def evaluate_cards(winning_numbers, card_numbers):
     i += 1
   return results
 
-def evaluate_results(results):
-  total = 0
-  for result in results:
-    if result == 0:
+# return an array of the appropriate copies based on the question logic
+def construct_copies_array(results):
+  copy_index = 0
+  resulting_cards = [[result] for result in results]
+  x = 0
+  while x < len(results):
+    result = resulting_cards[x]
+    if result[0] == 0:
+      x += 1
       continue
-    result_total = pow(2, result-1)
-    total += result_total
-  
-  return total
+    for copy in result:
+      copy_index = copy
+      while copy_index > 0:
+        i = x + copy_index
+        current_card_array = resulting_cards[i]
+        current_card_array.append(results[i])
+        copy_index -= 1
+    x += 1
+    
+  return resulting_cards
 
-      
-
-
+# flattens and counts the cards
+def evaluate_results(results):
+  copies_array = construct_copies_array(results)
+  flattened_copies_array = [result for sublist in copies_array for result in sublist]
+  return len(flattened_copies_array)
 
 with open('day-4-input.txt') as f:
   lines = [line for line in f.read().splitlines()]
