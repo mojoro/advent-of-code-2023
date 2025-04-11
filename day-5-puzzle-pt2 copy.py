@@ -26,17 +26,16 @@ class ConversionMap:
 
   def convert_ranges (self, input_ranges):
     results = []
-    simplified_results = []
     if not isinstance(input_ranges, list): input_ranges = [input_ranges]
     for input_range in input_ranges:
-      results.append(self.convert_range(input_range))
-    for result in results:
-      simplified_results.extend(simplify_ranges(result))
-    return simplify_ranges(simplified_results)
+      results.append(self.convert_range(input_range)[0])
+    return simplify_ranges(results)
 
   # needs to start with one input range
   def convert_range(self, input_ranges):
-    to_be_processed = [input_ranges]
+    to_be_processed = []
+    if not isinstance(input_ranges, list): to_be_processed = [input_ranges]
+    else: to_be_processed = input_ranges
     results = []
     for destination_range, source_range in zip(self.destination_ranges, self.source_ranges):
       results, remaining = self.__process_input_ranges(to_be_processed, destination_range, source_range, results)
@@ -44,7 +43,7 @@ class ConversionMap:
     if len(to_be_processed) > 0:
       for remainder in to_be_processed: results.append(remainder)
 
-    return results
+    return simplify_ranges(results)
   
 
   def __process_input_ranges(self, input_ranges, destination_range, source_range, results):
@@ -52,9 +51,8 @@ class ConversionMap:
     for input_range in input_ranges:
       offset = destination_range.start - source_range.start
       starts_equal, ends_equal, input_contains_map, map_contains_input, overlap_start, overlap_end = self.__get_range_conditionals(source_range, input_range)
-      overlaps = (starts_equal and ends_equal) or input_contains_map or map_contains_input or overlap_start or overlap_end
 
-      if overlaps:
+      if (starts_equal and ends_equal) or input_contains_map or map_contains_input or overlap_start or overlap_end:
         overlapped_range = range(max(source_range.start, input_range.start), min(source_range.stop, input_range.stop))
         results.append(range(overlapped_range.start + offset, overlapped_range.stop + offset))
         if input_range.start < source_range.start:
@@ -92,15 +90,11 @@ class ConversionPipe:
       key = conversion_map.get(key)
     return key
   
-  def convert_range_to_location(self, input_range):
-    previous_result = [input_range]
-    i = 0
-    results = []
-    result = input_range
+  def convert_range(self, input_range):
+    if not isinstance(input_range, list): [input_range]
     for conversion_map in self.conversion_maps:
-      result = conversion_map.convert_ranges(result)
-      results.append(result)
-    return result
+      results = conversion_map.convert_ranges(input_range)
+    return results
   
 def get_seed_ranges(seed_nums):
   seed_ranges = []
@@ -151,7 +145,4 @@ with open('day-5-input.txt') as f:
   seed_ranges = get_seed_ranges(seed_nums)
   all_map_data = extract_map_instructions(lines)
   pipe = ConversionPipe(all_map_data)
-  location_ranges = []
-  for seed_range in seed_ranges:
-    location_ranges.extend(pipe.convert_range_to_location(seed_range))
-  print(simplify_ranges(location_ranges)[0].start)
+  print(pipe.convert_range(seed_ranges[0]))
