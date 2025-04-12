@@ -56,15 +56,23 @@ class Hand:
     wild_card = 'J'
     sorted_cards = sorted(self.cards)
     card_set = set(sorted_cards)
-    if wild_card in card_set: card_set.remove(wild_card)
+    removed_wild_card = False
+    if wild_card in card_set: 
+      card_set.remove(wild_card)
+      removed_wild_card = True
     matches = []
     for card in card_set:
       match = self.cards.count(card)
-      if match > 1: matches.append(match + self.cards.count(wild_card))
-    return self.__evaluate_matches(matches)
+      if match > 1: matches.append(match)
+    if len(matches) >= 1 and removed_wild_card:
+      matches = [max(matches) + self.cards.count(wild_card)]
+    return self.__evaluate_matches(matches, removed_wild_card)
   
   # There must be a better way, but they are all quite unique, no?
-  def __evaluate_matches(self, matches):
+  def __evaluate_matches(self, matches, removed_wild_card):
+    if len(matches) > 1:
+      for match in matches:
+        if match >= 3 and removed_wild_card: raise ValueError("type won't be correct")
     # high-card
     if len(matches) == 0: return 0
     elif len(matches) == 1: 
