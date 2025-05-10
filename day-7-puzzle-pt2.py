@@ -114,5 +114,6 @@ with open('day-7-input.txt') as f:
   for i, hand in enumerate(hands, 1):
     print(f'Rank: {i}, {hand}')
   print(get_total_winnings(hands))
-  
+
+  # total should be 253473930. You've got someone else's answer now. Figure it out.
     
