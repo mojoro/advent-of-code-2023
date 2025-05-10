@@ -41,53 +41,41 @@ class Hand:
   def __str__(self):
     return f'Cards: {self.cards}, Bid: {self.bid}, Type: {self.type}'
   
-  # def calculate_total_card_strength(self):
-  #   max_strength = 12
-  #   total = 0
-  #   for i, card_strength in enumerate(reversed(self.card_strengths), 2):
-  #     if (i == 0): total += card_strength
-  #     else: 
-  #       slot_weight = 10**(i)
-  #       slot_strength = slot_weight + card_strength*slot_weight
-  #       total += slot_strength
-  #   return total
-  
   def calculate_type(self):
     wild_card = 'J'
     sorted_cards = sorted(self.cards)
     card_set = set(sorted_cards)
-    removed_wild_card = False
-    if wild_card in card_set: 
-      card_set.remove(wild_card)
-      removed_wild_card = True
+    wild_card_count = self.cards.count(wild_card)
     matches = []
     for card in card_set:
-      match = self.cards.count(card)
-      if match > 1: matches.append(match)
-    if len(matches) >= 1 and removed_wild_card:
-      matches = [max(matches) + self.cards.count(wild_card)]
-    return self.__evaluate_matches(matches, removed_wild_card)
+      if card != wild_card: match = self.cards.count(card) + wild_card_count
+      else: match = wild_card_count
+      matches.append(match)
+    if wild_card_count >= 1:
+      if sorted(matches) == [1,3,3] and wild_card_count == 1: matches = [2,3]
+      else:
+        biggest_match = max(matches)
+        matches = [max(biggest_match, wild_card_count)]
+
+    return self.__evaluate_matches(matches)
   
-  # There must be a better way, but they are all quite unique, no?
-  def __evaluate_matches(self, matches, removed_wild_card):
-    if len(matches) > 1:
-      for match in matches:
-        if match >= 3 and removed_wild_card: raise ValueError("type won't be correct")
-    # high-card
-    if len(matches) == 0: return 0
-    elif len(matches) == 1: 
+  def __evaluate_matches(self, matches):
+    if len(matches) == 1: 
       # 4-5 of a kind
       if matches[0] >= 4: return matches[0] + 1
       # 2 of a kind
       elif matches[0] == 2: return matches[0] - 1
       # 3 of a kind
       else: return matches[0]
-    elif len(matches) == 2: 
-      # full house
-      if matches[0] == 3 or matches[1] == 3: return 4
-      # 2 pair
-      else: return 2
-    else: raise ValueError('Invalid number of matches. 3 pairs or more is not possible in hands of five cards')
+    elif len(matches) > 1: 
+      if sorted(matches) == [1, 4]: return 5
+      elif sorted(matches) == [2, 3]: return 4
+      elif sorted(matches) == [1,1,3]: return 3
+      elif sorted(matches) == [1,2,2]: return 2
+      elif sorted(matches) == [1,1,1,2]: return 1
+      elif sorted(matches) == [1,1,1,1,1]: return 0
+
+    else: raise ValueError('match not found')
 
 
 def calculate_card_strengths(cards):
@@ -113,7 +101,7 @@ with open('day-7-input.txt') as f:
   hands.sort()
   for i, hand in enumerate(hands, 1):
     print(f'Rank: {i}, {hand}')
+
   print(get_total_winnings(hands))
 
-  # total should be 253473930. You've got someone else's answer now. Figure it out.
-    
+  # by far my ugliest solution so far. Don't know why I had so much trouble with this one.
